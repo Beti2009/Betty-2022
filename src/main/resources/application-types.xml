@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="productList" format="json">
+      <types:shape format="weave" example="examples/product list.json"><![CDATA[%dw 2.0
+
+type productList = {|
+  prodcutID: Number {"typeId": "int"}, 
+  prodcutName: String, 
+  productPrice: Number {"typeId": "int"}
+|} {"example": "{\\\"prodcutID\\\":102,\\\"prodcutName\\\":\\\"Dell\\\",\\\"productPrice\\\":900}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#0b0afe0b-1b52-43f3-ab9e-0dcf15b2552f">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="productList"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
