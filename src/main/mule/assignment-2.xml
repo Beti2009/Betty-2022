@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="27a22d8b-7660-493d-9ea4-174a30eae6f8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="assignment-2question-1" doc:id="c71efc0b-12b0-4bb7-88ad-084f58ff0bea" >
+		<http:listener doc:name="GET-payload" doc:id="5a8ca29c-d4a5-4cee-be6f-2d158eb14a9b" config-ref="HTTP_Listener_config" path="/question-1"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="da22e8dd-a5b0-4daf-a806-137f0225c624" />
+		<logger level="INFO" doc:name="Logger" doc:id="7b876634-e55f-44de-bc46-529e135a1191" message="#[payload]"/>
+	</flow>
+	<flow name="assignment-2-question-2" doc:id="aa75b8ad-b754-4a1f-8a90-08fa10510e8c" >
+		<http:listener doc:name="quaryParams" doc:id="a6271612-b792-4d10-808b-c93bdf486381" config-ref="HTTP_Listener_config" path="/question-2"/>
+		<set-variable doc:name="pid" doc:id="0b0afe0b-1b52-43f3-ab9e-0dcf15b2552f" variableName="pid" value="#[attributes.queryParams.productID]"/>
+		<set-variable value="#[attributes.queryParams.productName]" doc:name="pname" doc:id="2777a75d-6019-4763-816e-fe5b7567fb1b" variableName="pname"/>
+		<set-variable value="#[attributes.queryParams.productPrice]" doc:name="pprice" doc:id="0a37e8a3-206b-42e7-8f78-a97ab3962958" variableName="pprice"/>
+		<ee:transform doc:name="Transform Message" doc:id="ec4a7ed9-a6a6-4905-8616-d3f4274d21e5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"productID": vars.pid,
+	"productName": vars.pname,
+	"productPrice": vars.pprice
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="973e647a-1744-4409-ad7b-5cc758c80cbd" message="#[payload]"/>
+	</flow>
+	<flow name="assignment-2question-3" doc:id="aab08600-c363-4d96-8ae3-f74ed7b9a5ad" >
+		<http:listener doc:name="payload uriParams" doc:id="5bea558b-0e02-4488-9b89-722737a969c4" config-ref="HTTP_Listener_config" path="/products/{productID}"/>
+		<set-variable value="#[attributes.uriParams.productID]" doc:name="pid" doc:id="3fcd1135-da8a-40c6-a1af-05a3089989bf" variableName="pid"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="75292652-b9cb-4e04-b75f-9bcdc12a74af" />
+		<ee:transform doc:name="Transform Message" doc:id="283e67cc-6195-4fcd-8930-2402795675e6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+{
+	"productID": vars.pid,
+	"productName": payload.productName,
+	"productPrice": payload.productPrice
+},
+Suggestion: if( payload.productPrice<1000) "Fair" else "Expensive"
+
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="20c8ab5d-f3c1-4caf-bf69-a0e0b93c8065" message="#[payload]"/>
+	</flow>
+	<flow name="assignment-2Flow" doc:id="1f75ae97-2b4b-4b87-af77-acb62d6ff553" >
+		<http:listener doc:name="Listener" doc:id="e94689f5-6df6-48ab-bdd2-3f2793b98e4c" config-ref="HTTP_Listener_config" path="/question-4/{pid}"/>
+		<ee:transform doc:name="Transform Message" doc:id="a4bd2022-2280-4529-badc-d2b96109dfd4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var id = attributes.uriParams.pid
+var name = attributes.queryParams.pname
+//var buyer_firstName = "Jack"
+//var buyer_lastName = "Dawson"
+---
+{
+	"productID": id,
+	"productName":name ,
+	"productPrice": payload.pprice,
+	"buyerFullName": payload.buyer_firstName ++ ' ' ++ payload.buyer_lastName
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="pid" ><![CDATA[%dw 2.0
+output application/json
+---
+attributes.uriParams.pid]]></ee:set-variable>
+				<ee:set-variable variableName="pname" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.pname]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f08838a0-7774-4463-b953-0809dcd466b2" message="#[payload]"/>
+	</flow>
+</mule>
